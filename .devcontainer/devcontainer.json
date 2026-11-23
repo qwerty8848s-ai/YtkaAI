@@ -11,8 +11,9 @@
     "CLOUDFLARE_WORKER_URL": { "description": "HTTPS URL Cloudflare Worker" },
     "RUNNER_SECRET": { "description": "Shared secret with Cloudflare Worker" },
     "OPENCLAW_GATEWAY_TOKEN": { "description": "Local OpenClaw gateway token" },
-    "MODEL_API_KEY": { "description": "Provider API key" },
-    "MODEL_BASE_URL": { "description": "OpenAI-compatible base URL including /v1 when applicable" },
+    "MODEL_PROVIDER": { "description": "privateapi (default) or codex for ChatGPT sign-in" },
+    "MODEL_API_KEY": { "description": "Provider API key (only for privateapi)" },
+    "MODEL_BASE_URL": { "description": "OpenAI-compatible base URL (only for privateapi)" },
     "MODELS_JSON": { "description": "JSON array matching Worker MODELS_JSON" }
   }
 }

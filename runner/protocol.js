@@ -1,3 +1,5 @@
+import { modelRef } from './config.js';
+
 export async function* events(body) {
   let buffer = '';
   for await (const text of body.pipeThrough(new TextDecoderStream())) {
@@ -20,7 +22,7 @@ export async function generate(gateway, token, job, model, signal, append) {
   const response = await fetch(gateway + '/v1/responses', {
     method: 'POST', signal, headers: {
       'content-type': 'application/json', authorization: 'Bearer ' + token,
-      'x-openclaw-model': 'privateapi/' + model, 'x-openclaw-session-key': session,
+      'x-openclaw-model': modelRef(model), 'x-openclaw-session-key': session,
     },
     body: JSON.stringify({ model: 'openclaw/main', input: job.prompt, stream: true }),
   });

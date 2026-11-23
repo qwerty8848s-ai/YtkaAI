@@ -9,6 +9,12 @@ export const configPath = join(stateDir, 'openclaw.json');
 export const binary = join(root, '.claw-runtime/node_modules/.bin/openclaw');
 export const lockPath = join(stateDir, 'cli.lock');
 
+export function modelRef(id, provider = process.env.MODEL_PROVIDER || 'privateapi') {
+  if (provider === 'codex') return 'openai/' + id;
+  if (provider === 'privateapi') return 'privateapi/' + id;
+  throw new Error('Invalid MODEL_PROVIDER');
+}
+
 export function gatewayEnv() {
   const { RUNNER_SECRET, CLOUDFLARE_WORKER_URL, CODESPACE_VSCODE_FOLDER, ...env } = process.env;
   return { ...env, OPENCLAW_STATE_DIR: stateDir, OPENCLAW_CONFIG_PATH: configPath };
@@ -17,13 +23,24 @@ export function gatewayEnv() {
 export async function configure() {
   await mkdir(stateDir, { recursive: true, mode: 0o700 });
   if (existsSync(configPath)) return;
-  const baseUrl = new URL(process.env.MODEL_BASE_URL);
-  if (!['https:', 'http:'].includes(baseUrl.protocol) || baseUrl.username || baseUrl.password) throw new Error('Invalid MODEL_BASE_URL');
   const ids = JSON.parse(process.env.MODELS_JSON);
   if (!Array.isArray(ids) || !ids.length || ids.some(id => typeof id !== 'string' || !/^[\w./:@+-]{1,160}$/.test(id))) {
     throw new Error('Invalid MODELS_JSON');
   }
-  if (!process.env.MODEL_API_KEY || !process.env.OPENCLAW_GATEWAY_TOKEN) throw new Error('Missing model or gateway secret');
+  if (!process.env.OPENCLAW_GATEWAY_TOKEN) throw new Error('Missing OPENCLAW_GATEWAY_TOKEN');
+  const provider = process.env.MODEL_PROVIDER || 'privateapi';
+  const primary = modelRef(ids[0], provider);
+  const codex = provider === 'codex';
+  let models;
+  if (!codex) {
+    const baseUrl = new URL(process.env.MODEL_BASE_URL);
+    if (!['https:', 'http:'].includes(baseUrl.protocol) || baseUrl.username || baseUrl.password) throw new Error('Invalid MODEL_BASE_URL');
+    if (!process.env.MODEL_API_KEY) throw new Error('Missing MODEL_API_KEY');
+    models = { mode: 'merge', providers: { privateapi: {
+      baseUrl: baseUrl.href.replace(/\/$/, ''), api: 'openai-completions', apiKey: '${MODEL_API_KEY}',
+      models: ids.map(id => ({ id, name: id, input: ['text'] })),
+    } } };
+  }
   const workspace = join(stateDir, 'workspace');
   await mkdir(workspace, { recursive: true, mode: 0o700 });
   const config = {
@@ -34,14 +51,13 @@ export async function configure() {
       http: { endpoints: { responses: { enabled: true } } },
     },
     agents: { defaults: {
-      workspace, model: { primary: 'privateapi/' + ids[0] },
+      workspace, model: { primary },
       maxConcurrent: 1, timeoutSeconds: 600,
-      models: Object.fromEntries(ids.map(id => ['privateapi/' + id, {}])),
+      models: Object.fromEntries(ids.map(id => [
+        modelRef(id, provider), codex ? { agentRuntime: { id: 'codex' } } : {},
+      ])),
     } },
-    models: { mode: 'merge', providers: { privateapi: {
-      baseUrl: baseUrl.href.replace(/\/$/, ''), api: 'openai-completions', apiKey: '${MODEL_API_KEY}',
-      models: ids.map(id => ({ id, name: id, input: ['text'] })),
-    } } },
+    ...(models ? { models } : {}),
     session: { reset: { mode: 'idle', idleMinutes: 525600 } },
     tools: { profile: 'coding' },
     cron: { enabled: false },

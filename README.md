@@ -67,6 +67,17 @@
 4. Остановите Codespace в GitHub, закройте вкладку IDE и отправьте два разных сообщения боту. Проверьте один запуск и оба ответа. Это проверяет, что ваш Codespace исполняет `postStartCommand` при запуске через API без подключения IDE. После ответа нажмите «Выключить» и дождитесь состояния `Shutdown` на GitHub. Следующим сообщением проверьте повторный запуск. Настройте штатный idle timeout GitHub выше обычной длительности тестового запуска и ответа. GitHub может независимо остановить среду по своим лимитам. [Жизненный цикл Codespaces](https://docs.github.com/en/codespaces/about-codespaces/understanding-the-codespace-lifecycle)
 5. Для повседневной эксплуатации переключитесь на отдельное развёртывание с `BACKEND: "standalone"`. Один Telegram-бот может иметь только один webhook, поэтому для параллельного тестирования используйте отдельный тестовый бот и Worker/D1.
 
+### Вместо API-ключа: вход через ChatGPT (Codex)
+
+При первоначальной настройке задайте на хосте `MODEL_PROVIDER=codex` и укажите в `MODELS_JSON` идентификаторы из каталога Codex без префикса `openai/`, например `["gpt-5.6-luna"]`. Список в Worker должен совпадать. `MODEL_BASE_URL` и `MODEL_API_KEY` в этом режиме не нужны. После установки OpenClaw выполните на хосте:
+
+```bash
+./scripts/claw models auth login --provider openai
+./scripts/claw models status --check
+```
+
+Подтвердите вход в своём аккаунте ChatGPT по инструкции CLI. Вход сохраняется в каталоге состояния OpenClaw; не копируйте его данные в Worker или GitHub Secrets. Если `openclaw.json` уже создан для другого провайдера, смена переменной не перезапишет файл: обновите настройки моделей существующего экземпляра или используйте отдельный каталог состояния. [Настройка Codex в OpenClaw](https://docs.openclaw.ai/providers/openai/setup#codex-subscription)
+
 ### Статистика Codespaces в Mini App
 
 Добавьте в конфигурацию `GH_LOGIN`, при необходимости измените `GH_MONTHLY_CORE_HOURS` и сохраните отдельный fine-grained PAT с **Plan: Read** через `npx wrangler secret put GH_BILLING_TOKEN`. Панель берёт данные по аккаунту за текущий календарный месяц UTC через `GET /users/{username}/settings/billing/usage/summary` и кеширует успешный ответ до пяти минут на экземпляре Worker. Сумма берётся по compute SKU; отчёт может запаздывать. Если доступ к отчёту отсутствует, панель показывает «Нет данных». Для точного остатка по расчётному периоду и хранения используйте GitHub Billing. [API биллинга](https://docs.github.com/en/rest/billing/usage#get-billing-usage-summary-for-a-user), [список SKU](https://docs.github.com/en/billing/reference/product-and-sku-names#github-codespaces-skus)
