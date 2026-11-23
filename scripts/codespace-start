@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+umask 077
+mkdir -p .claw-state
+if [[ "${1:-}" != '--supervise' ]]; then
+  nohup "$PWD/scripts/codespace-start" --supervise >>.claw-state/runner.log 2>&1 </dev/null &
+  exit 0
+fi
+exec 9>.claw-state/start.lock
+flock -n 9 || exit 0
+./scripts/install
+while ! ./scripts/run 9>&-; do
+  sleep 8
+done

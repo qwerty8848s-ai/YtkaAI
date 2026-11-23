@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "openclaw-telegram",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-23",
+  "workers_dev": true,
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
+  "d1_databases": [{ "binding": "DB", "database_name": "openclaw-telegram", "database_id": "00000000-0000-0000-0000-000000000000" }],
+  "durable_objects": { "bindings": [{ "name": "CONTROL", "class_name": "Control" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Control"] }],
+  "vars": {
+    "BACKEND": "standalone",
+    "OWNER_ID": "123456789",
+    "MODELS_JSON": "[\"model-id\"]",
+    "CODESPACE_NAME": "",
+    "GH_LOGIN": "",
+    "GH_MONTHLY_CORE_HOURS": "120"
+  }
+}

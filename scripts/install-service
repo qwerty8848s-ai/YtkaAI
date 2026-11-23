@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+./scripts/install
+project="$PWD"
+[[ "$project" != *'"'* && "$project" != *'%'* && "$project" != *'\'* ]] || {
+  printf '%s\n' 'Выберите путь без кавычек, обратной косой черты и знака процента.' >&2
+  exit 1
+}
+node_dir="$(dirname "$(command -v node)")"
+unit_dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
+install -d -m 700 "$unit_dir"
+cat > "$unit_dir/openclaw-telegram.service" <<UNIT
+[Unit]
+Description=OpenClaw Telegram runner
+[Service]
+Type=simple
+WorkingDirectory="$project"
+Environment="PATH=$node_dir:/usr/local/bin:/usr/bin:/bin"
+ExecStart="$project/scripts/run"
+Restart=on-failure
+RestartSec=8
+TimeoutStopSec=35
+[Install]
+WantedBy=default.target
+UNIT
+systemctl --user daemon-reload
+systemctl --user enable --now openclaw-telegram.service

@@ -1,0 +1,9 @@
+node_modules/
+.claw-state/
+.claw-runtime/
+.env
+telegram.local.env
+wrangler.jsonc
+migrations/.wrangler/
+.playwright-mcp/
+.playwright-profile/

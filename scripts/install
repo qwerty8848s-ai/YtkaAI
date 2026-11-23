@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+command -v flock >/dev/null
+node -e 'const [major, minor] = process.versions.node.split(".").map(Number); if (!(major === 24 && minor >= 16 || major === 26 && minor >= 1 || major > 26)) process.exit(1);' ||
+  { printf '%s\n' 'Установите Node.js 24.16+ (ветка 24) или 26.1+.' >&2; exit 1; }
+mkdir -p .claw-runtime
+version=2026.11.7
+if ! node -e 'if (require("./.claw-runtime/node_modules/openclaw/package.json").version !== process.argv[1]) process.exit(1)' "$version" 2>/dev/null; then
+  npm install --prefix .claw-runtime --no-fund --no-audit --save-exact "openclaw@$version"
+fi

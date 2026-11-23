@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Пульт OpenClaw</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main>
+    <header class="masthead">
+      <div class="brand" aria-hidden="true">OC</div>
+      <div><p class="label">Пульт управления</p><h1>OpenClaw</h1></div>
+    </header>
+    <section class="card status" aria-labelledby="status-title">
+      <div class="status-header">
+        <div>
+          <p class="label" id="status-title">Статус агента</p>
+          <p class="state" role="status" id="phase">Подключаемся…</p>
+        </div>
+        <span class="indicator" id="indicator" aria-hidden="true"></span>
+      </div>
+      <p class="details" id="status-detail"></p>
+      <div class="actions">
+        <button type="button" id="start" disabled>Запустить</button>
+        <button type="button" id="stop" class="secondary" disabled>Выключить</button>
+      </div>
+    </section>
+    <section class="card usage" aria-labelledby="usage-title">
+      <h2 id="usage-title">GitHub Codespaces</h2>
+      <p class="amount" id="amount">—</p>
+      <progress id="progress" value="0" max="120" aria-label="Использовано ядро-часов" hidden></progress>
+      <p class="details" id="usage-detail">Использование за месяц</p>
+    </section>
+    <form class="card settings" id="settings">
+      <h2>Настройки</h2>
+      <label for="model">ИИ-модель</label>
+      <select id="model" name="model" disabled></select>
+      <label for="sleep">Автосон, минуты</label>
+      <input id="sleep" name="sleep" type="number" min="1" max="60" step="1" value="5" required disabled>
+      <button type="submit" id="save" class="secondary" disabled>Сохранить</button>
+    </form>
+    <p class="notice" id="notice" role="status"></p>
+  </main>
+</body>
+</html>

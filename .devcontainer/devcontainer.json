@@ -1,0 +1,18 @@
+{
+  "name": "OpenClaw Telegram test",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "24" }
+  },
+  "hostRequirements": { "cpus": 2, "memory": "8gb" },
+  "postCreateCommand": "./scripts/install",
+  "postStartCommand": "./scripts/codespace-start",
+  "secrets": {
+    "CLOUDFLARE_WORKER_URL": { "description": "HTTPS URL Cloudflare Worker" },
+    "RUNNER_SECRET": { "description": "Shared secret with Cloudflare Worker" },
+    "OPENCLAW_GATEWAY_TOKEN": { "description": "Local OpenClaw gateway token" },
+    "MODEL_API_KEY": { "description": "Provider API key" },
+    "MODEL_BASE_URL": { "description": "OpenAI-compatible base URL including /v1 when applicable" },
+    "MODELS_JSON": { "description": "JSON array matching Worker MODELS_JSON" }
+  }
+}

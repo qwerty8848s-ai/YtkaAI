@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+umask 077
+runtime="${OPENCLAW_STATE_DIR:-$PWD/.claw-state}"
+mkdir -p "$runtime"
+exec flock -n -F "$runtime/runner.lock" node --env-file-if-exists="$PWD/.env" runner/main.js
