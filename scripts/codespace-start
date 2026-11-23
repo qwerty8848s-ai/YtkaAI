@@ -9,6 +9,11 @@ if [[ "${1:-}" != '--supervise' ]]; then
 fi
 exec 9>.claw-state/start.lock
 flock -n 9 || exit 0
+if [[ "${CODESPACES:-}" == true ]]; then
+  # OpenClaw rejects writable parents of its temporary/state directories.
+  chmod go-w -- "$PWD"
+  export TMPDIR=/tmp
+fi
 ./scripts/install
 while ! ./scripts/run 9>&-; do
   sleep 8
