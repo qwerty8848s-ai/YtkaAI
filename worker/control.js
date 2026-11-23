@@ -3,6 +3,7 @@ import { chunks, github, json, models, telegram } from './services.js';
 const LEASE_MS = 90000;
 const FRESH_MS = 25000;
 const STARTUP_MS = 180000;
+const MANUAL_DRAIN_MS = 180000;
 const isId = value => Number.isSafeInteger(value) && value > 0;
 
 export class Control {
@@ -113,6 +114,8 @@ export class Control {
       state.manual = state.phase !== 'asleep';
       state.drain = state.manual;
       state.pauseThrough = Date.now();
+      if (state.drain) state.phase = 'stopping';
+      state.error = null;
     } else {
       return json({ error: 'Неизвестное действие.' }, 400);
     }
@@ -253,9 +256,13 @@ export class Control {
       const space = await github(this.env.GH_CODESPACES_TOKEN, path);
       const down = ['Shutdown', 'Archived'].includes(space.state);
       if (state.drain) {
+        // After a rebuild the previous boot ID can remain stored even if no
+        // runner will ever acknowledge the stop. A live runner still gets to drain.
+        const stopWithoutRunner = state.manual &&
+          now - Math.max(state.seen, state.pauseThrough ?? state.startedAt ?? 0) >= MANUAL_DRAIN_MS;
         if (down && !active) {
           this.slept(state);
-        } else if (!active && (state.parked || (state.manual && !state.boot && now - state.startedAt > STARTUP_MS)) &&
+        } else if (!active && (state.parked || stopWithoutRunner) &&
                    !['ShuttingDown', 'Starting', 'Provisioning', 'Rebuilding'].includes(space.state)) {
           state.committed = true;
           state.phase = 'stopping';
@@ -271,7 +278,7 @@ export class Control {
         state.phase = 'starting';
         state.startedAt = now;
       }
-      state.error = state.phase === 'starting' && now - state.startedAt > STARTUP_MS
+      state.error = !state.drain && state.phase === 'starting' && now - state.startedAt > STARTUP_MS
         ? 'Хост запущен, но OpenClaw ещё не подключился. Проверьте журнал запуска.' : null;
     } catch (error) {
       state.nextGit = now + 30000;

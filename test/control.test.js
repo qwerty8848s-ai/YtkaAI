@@ -119,6 +119,51 @@ test('automatic sleep waits for a leased job and uses the last message timestamp
   assert.equal((await post('status')).phase, 'asleep');
 });
 
+test('manual Codespace stop recovers from a missing runner with a stored boot ID', async t => {
+  const { data, post, tick, message } = setup();
+  let now = Date.now();
+  t.mock.method(Date, 'now', () => now);
+  let githubState = 'Available';
+  const actions = [];
+  t.mock.method(globalThis, 'fetch', async url => {
+    const action = new URL(url).pathname.split('/').pop();
+    if (action === 'stop' || action === 'start') {
+      actions.push(action);
+      githubState = action === 'stop' ? 'ShuttingDown' : 'Available';
+    }
+    return Response.json({ state: githubState });
+  });
+  await post('power', { action: 'start' });
+  const boot = randomUUID();
+  const poll = runner(post, boot);
+  assert.equal((await poll()).mode, 'idle');
+  data.get('lifecycle').error = 'Previous startup error';
+  await post('power', { action: 'stop' });
+  await message(31, 'resume after stop');
+  assert.equal((await post('status')).phase, 'stopping');
+  assert.equal((await post('status')).error, null);
+
+  now += 179000;
+  await tick();
+  assert.deepEqual(actions, []);
+  now += 16000;
+  assert.equal((await poll()).mode, 'park');
+  await tick();
+  assert.deepEqual(actions, [], 'a healthy runner may still be draining');
+
+  now += 180001;
+  assert.equal(data.get('lifecycle').boot, boot);
+  await tick();
+  assert.deepEqual(actions, ['stop']);
+  githubState = 'Shutdown';
+  now += 15000;
+  await tick();
+  assert.equal((await post('status')).phase, 'starting');
+  await tick();
+  assert.deepEqual(actions, ['stop', 'start']);
+  assert.equal((await runner(post, randomUUID())()).job.prompt, 'resume after stop');
+});
+
 test('Mini App validates Telegram signatures, expiry and the configured owner', async () => {
   const user = JSON.stringify({ id: 123, first_name: 'Тест' });
   const token = 'sample:token';
