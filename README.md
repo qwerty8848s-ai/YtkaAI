@@ -69,7 +69,7 @@
 
 ### Вместо API-ключа: вход через ChatGPT (Codex)
 
-При первоначальной настройке задайте на хосте `MODEL_PROVIDER=codex` и укажите в `MODELS_JSON` идентификаторы из каталога Codex без префикса `openai/`, например `["gpt-5.6-luna"]`. Список в Worker должен совпадать. `MODEL_BASE_URL` и `MODEL_API_KEY` в этом режиме не нужны. После установки OpenClaw выполните на хосте:
+При первоначальной настройке задайте на хосте `MODEL_PROVIDER=codex` и укажите в `MODELS_JSON` идентификаторы из каталога Codex без префикса `openai/`, например `["gpt-5.6-luna"]`. Список в Worker должен совпадать. Агент использует встроенный runtime OpenClaw с OAuth: отдельный плагин Codex, `MODEL_BASE_URL` и `MODEL_API_KEY` не нужны. После установки OpenClaw выполните на хосте:
 
 ```bash
 ./scripts/claw models auth login --provider openai

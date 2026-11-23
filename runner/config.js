@@ -54,7 +54,7 @@ export async function configure() {
       workspace, model: { primary },
       maxConcurrent: 1, timeoutSeconds: 600,
       models: Object.fromEntries(ids.map(id => [
-        modelRef(id, provider), codex ? { agentRuntime: { id: 'codex' } } : {},
+        modelRef(id, provider), codex ? { agentRuntime: { id: 'openclaw' } } : {},
       ])),
     } },
     ...(models ? { models } : {}),

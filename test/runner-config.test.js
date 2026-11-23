@@ -19,11 +19,11 @@ function makeConfig(t, overrides) {
   return JSON.parse(readFileSync(join(state, 'openclaw.json'), 'utf8'));
 }
 
-test('Codex config uses the OpenAI model route without API credentials', t => {
+test('Codex sign-in uses the embedded OpenClaw runtime without API credentials', t => {
   const config = makeConfig(t, { MODEL_PROVIDER: 'codex', MODELS_JSON: '["gpt-5.6-luna"]' });
   const ref = modelRef('gpt-5.6-luna', 'codex');
   assert.equal(config.agents.defaults.model.primary, ref);
-  assert.deepEqual(config.agents.defaults.models[ref], { agentRuntime: { id: 'codex' } });
+  assert.deepEqual(config.agents.defaults.models[ref], { agentRuntime: { id: 'openclaw' } });
   assert.equal(config.models, undefined);
   assert.equal(config.gateway.bind, 'loopback');
 });

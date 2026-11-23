@@ -12,6 +12,9 @@ flock -n 9 || exit 0
 if [[ "${CODESPACES:-}" == true ]]; then
   # OpenClaw rejects writable parents of its temporary/state directories.
   chmod go-w -- "$PWD"
+  if [[ "$PWD" == /workspaces/* && -d /workspaces && ! -L /workspaces && -O /workspaces ]]; then
+    chmod +t -- /workspaces
+  fi
   export TMPDIR=/tmp
 fi
 ./scripts/install
